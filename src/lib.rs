@@ -16,6 +16,7 @@ use block_editor::{commands, text_editor::TextEdit, EditorModel};
 use lsp::{
     completion::VSCodeCompletionItem,
     diagnostics::{Diagnostic, VSCodeCodeAction},
+    documentation::VSCodeHoverItem,
 };
 
 // provide rust implementation of stdlib functions to our C grammars if on wasm
@@ -23,6 +24,7 @@ use lsp::{
 pub mod c_shim;
 
 /* ----- Javascript -> WASM ----- */
+//
 #[wasm_bindgen]
 pub fn run_editor(file_name: String, font_name: String, font_size: f64) {
     // send panic messages to console + telemetry
@@ -162,6 +164,17 @@ pub fn redo() {
     }
 }
 
+#[wasm_bindgen]
+pub fn set_hover_info(json: JsValue) {
+    let hoverInfo: Vec<VSCodeHoverItem> =
+        serde_wasm_bindgen::from_value(json).expect("Could not deserialize hover info");
+    if let Some(sink) = EVENT_SINK.get() {
+        sink.submit_command(commands::SET_HOVER_DOCUMENTATION, hoverInfo, Target::Global)
+            .unwrap();
+    } else {
+        console_log!("could not get sink");
+    }
+}
 /* ----- WASM -> Javascript ----- */
 pub mod vscode {
     use std::collections::HashMap;
@@ -181,7 +194,7 @@ pub mod vscode {
 
         #[wasm_bindgen(js_name = setClipboard)]
         pub fn set_clipboard(text: String);
-
+        // All of these are exported in run.js
         #[wasm_bindgen(js_name = requestQuickFixes)]
         pub fn request_quick_fixes(line: usize, col: usize);
 
@@ -199,6 +212,10 @@ pub mod vscode {
 
         #[wasm_bindgen(js_name = telemetryCrash)]
         pub fn telemetry_crash(msg: String);
+
+        #[wasm_bindgen(js_name = requestHoverInfo)]
+        pub fn request_hover_info(line: usize, col: usize);
+
     }
 
     pub fn log_event(cat: &'static str, info: HashMap<&'static str, &str>) {

@@ -162,6 +162,7 @@ pub(crate) mod vscode {
     pub fn set_clipboard(_: String) {}
     pub fn request_quick_fixes(_: usize, _: usize) {}
     pub fn request_completions(_: usize, _: usize) {}
+    pub fn request_hover_info(_: usize, _: usize) {}
     pub fn execute_command(_: String, _: wasm_bindgen::JsValue) {}
     pub fn execute_workspace_edit(_: wasm_bindgen::JsValue) {}
     pub fn log_event(_: &'static str, _: HashMap<&'static str, &str>) {}

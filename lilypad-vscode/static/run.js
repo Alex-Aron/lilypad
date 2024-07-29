@@ -1,4 +1,4 @@
-import init, { run_editor, set_text, apply_edit, copy_selection, cut_selection, insert_text, new_diagnostics, set_quick_fixes, set_completions, undo, redo } from "./lilypad_web.js";
+import init, { run_editor, set_text, apply_edit, copy_selection, cut_selection, insert_text, new_diagnostics, set_hover_info, set_quick_fixes, set_completions, undo, redo } from "./lilypad_web.js";
 
 async function run() {
   await init();
@@ -45,6 +45,7 @@ export function requestQuickFixes(line, col) {
 }
 
 export function requestCompletions(line, col) {
+  //Types in run.js are messages in lilypadEditor.ts switch statement
   vscode.postMessage({
     type: "get_completions",
     line: line,
@@ -82,6 +83,16 @@ export function telemetryCrash(msg) {
   });
 }
 
+export function requestHoverInfo(line, col){
+  vscode.postMessage({
+    type: "hover_info",
+    line: line,
+    col: col,
+  });
+}
+
+
+
 // extension -> web view messages
 window.addEventListener("message", event => {
   const message = event.data;
@@ -106,6 +117,9 @@ window.addEventListener("message", event => {
       break;
     case "redo":
       redo();
+      break;
+    case "return_documentation_info"://Call function when the rust code decides it is time
+      set_hover_info(message.hover);
       break;
   }
 });

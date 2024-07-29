@@ -6,7 +6,10 @@ use druid::{
 };
 use ropey::Rope;
 
-use super::{gutter_drawer, undo_manager::UndoStopCondition, TextEditor, CURSOR_BLINK_INTERVAL};
+use super::{
+    gutter_drawer, undo_manager::UndoStopCondition, TextEditor, CURSOR_BLINK_INTERVAL,
+    HOVER_INTERVAL,
+};
 use crate::{
     block_editor::{
         self, block_drawer, commands, text_range::TextRange, EditorModel, FONT_HEIGHT, FONT_WIDTH,
@@ -126,8 +129,20 @@ impl Widget<EditorModel> for TextEditor {
                                 break;
                             }
                         }
+                        //Timer implementation
                     } else {
+                        //Get mouse to raw coord, check
                         data.diagnostic_selection = None
+                    }
+                    if self.selection.is_cursor() {
+                        let coord = self.mouse_to_raw_coord(mouse.pos);
+                        self.documentation_popup
+                            .widget_mut()
+                            .event(ctx, event, data, env);
+                        self.hover_timer = ctx.request_timer(HOVER_INTERVAL);
+                        if self.hover_timer == ctx.request_timer(HOVER_INTERVAL) {
+                            vscode::request_hover_info(coord.line, coord.col);
+                        }
                     }
                 }
             }
@@ -341,6 +356,7 @@ impl Widget<EditorModel> for TextEditor {
     ) {
         self.diagnostic_popup.update(ctx, data, env);
         self.completion_popup.update(ctx, data, env);
+        self.documentation_popup.update(ctx, data, env);
     }
 
     fn layout(
@@ -476,5 +492,6 @@ impl Widget<EditorModel> for TextEditor {
         // pass lifecycle events to children
         self.diagnostic_popup.lifecycle(ctx, event, data, env);
         self.completion_popup.lifecycle(ctx, event, data, env);
+        self.documentation_popup.lifecycle(ctx, event, data, env);
     }
 }

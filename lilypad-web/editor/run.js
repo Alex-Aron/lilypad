@@ -21,6 +21,7 @@ export function setClipboard(text) {
 export function requestQuickFixes(line, col) { }
 export function executeCommand(command, args) { }
 export function requestCompletions(line, col) { }
+export function hoverInfo(text, line, col) { }
 export function executeWorkspaceEdit(edit) { }
 
 // handle clipboard actions

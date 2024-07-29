@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import { activeLilypadEditor, logger, setActiveLilypadEditor } from "./extension";
+import { homedir } from "os";
 
 export class LilypadEditorProvider implements vscode.CustomTextEditorProvider {
     private internalEdit = false;
@@ -26,7 +27,6 @@ export class LilypadEditorProvider implements vscode.CustomTextEditorProvider {
             enableScripts: true,
         };
         webviewPanel.webview.html = this.getHtml(webviewPanel.webview, document);
-
         // Sync our editor to external changes
         const changeDocumentSubscription = vscode.workspace.onDidChangeTextDocument(e => {
             if (e.document.uri.toString() === document.uri.toString()) {
@@ -143,6 +143,20 @@ export class LilypadEditorProvider implements vscode.CustomTextEditorProvider {
                     });
                     break;
                 }
+                case "hover_info":{
+                    const URI = document.uri; 
+                    const cursor = new vscode.Position(message.line, message.col);
+                    const hover = vscode.commands.executeCommand('vscode.executeHoverProvider', URI, cursor);
+                    vscode.commands.executeCommand<vscode.Hover>('vscode.executeHoverProvider', URI, cursor
+                    ).then((hover) => {
+                        webviewPanel.webview.postMessage({
+                            type: "return_documentation_info",
+                            hover: hover.contents
+                        });
+                    });
+                    break;
+                }
+
                 case "execute_command": {
                     vscode.commands.executeCommand(message.command, ...message.args);
                     break;
@@ -189,7 +203,6 @@ export class LilypadEditorProvider implements vscode.CustomTextEditorProvider {
         if (this.applyingEdit) {
             return;
         }
-
         // apply first element in queue, if it exists
         let nextEdit = this.editQueue.shift();
         if (nextEdit) {

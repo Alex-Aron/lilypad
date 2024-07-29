@@ -46,6 +46,15 @@ pub mod diagnostic {
     pub const HINT: Color = Color::rgb8(0xA0, 0xA0, 0xA0);
 }
 
+pub mod documentation {
+    use druid::Color;
+
+    pub const ERROR: Color = Color::rgb8(0xC2, 0x40, 0x38);
+    pub const WARNING: Color = Color::rgb8(0xD1, 0x9A, 0x66);
+    pub const INFO: Color = Color::rgb8(0x37, 0x94, 0xFF);
+    pub const HINT: Color = Color::rgb8(0xA0, 0xA0, 0xA0);
+}
+
 pub const INTERFACE_TEXT: Color = one_dark::WHITE;
 pub const BACKGROUND: Color = one_dark::BLACK;
 pub const CURSOR: Color = Color::rgb8(0x52, 0x8B, 0xFF);

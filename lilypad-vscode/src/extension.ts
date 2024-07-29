@@ -16,7 +16,6 @@ export function activate(context: vscode.ExtensionContext) {
 	let sender = new CustomTelemetrySender();
 	logger = vscode.env.createTelemetryLogger(sender);
 	context.subscriptions.push(logger);
-
 	// register custom editor
 	context.subscriptions.push(LilypadEditorProvider.register(context));
 

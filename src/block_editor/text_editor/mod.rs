@@ -6,6 +6,7 @@ use druid::WidgetPod;
 mod block_dragging;
 mod completion_popup;
 mod diagnostics_popup;
+mod documentation_popup;
 mod gutter_drawer;
 mod ime;
 mod lifecycle;
@@ -23,11 +24,13 @@ use crate::lang::LanguageConfig;
 use crate::parse::TreeManager;
 use completion_popup::CompletionPopup;
 use diagnostics_popup::DiagnosticPopup;
+use documentation_popup::DocumentationPopup;
 use ime::ImeComponent;
 
 pub use text_editing::TextEdit;
 
 const CURSOR_BLINK_INTERVAL: Duration = Duration::from_millis(700);
+const HOVER_INTERVAL: Duration = Duration::from_secs(1);
 
 pub struct TextEditor {
     /// generates syntax tree from source code
@@ -47,6 +50,9 @@ pub struct TextEditor {
 
     /// the timer that toggles the cursor
     cursor_timer: TimerToken,
+
+    /// the timer that toggles the hover documentation
+    hover_timer: TimerToken,
 
     /// if the blinking cursor is visible
     cursor_visible: bool,
@@ -79,6 +85,9 @@ pub struct TextEditor {
     /// overlay view for completions
     completion_popup: WidgetPod<EditorModel, CompletionPopup>,
 
+    /// overlay view for hover documentations
+    documentation_popup: WidgetPod<EditorModel, DocumentationPopup>,
+
     /// connects to the system IME to handle text input
     ime: ImeComponent,
 }
@@ -92,6 +101,7 @@ impl TextEditor {
             selection: TextRange::ZERO,
             pseudo_selection: None,
             cursor_timer: TimerToken::INVALID,
+            hover_timer: TimerToken::INVALID,
             cursor_visible: true,
             text_drawer: TextDrawer::new(lang),
             text_changed: true,
@@ -102,6 +112,7 @@ impl TextEditor {
             drag_insertion_line: None,
             diagnostic_popup: WidgetPod::new(DiagnosticPopup::new()),
             completion_popup: WidgetPod::new(CompletionPopup::new()),
+            documentation_popup: WidgetPod::new(DocumentationPopup::new()),
             ime: ImeComponent::default(),
         }
     }
