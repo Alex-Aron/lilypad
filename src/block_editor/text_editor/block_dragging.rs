@@ -184,6 +184,8 @@ impl TextEditor {
             NewScopeChar::Colon => ((coord.col / 4) * 4).min(allowed_indent),
             // when scope is brace based, only allow the maximum indent
             NewScopeChar::Brace => allowed_indent,
+            // when scope is begin/end based, only allow the maximum indent
+            NewScopeChar::Begin => allowed_indent,
         };
 
         TextPoint::new(line, indent)

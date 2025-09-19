@@ -47,6 +47,18 @@
           },
           {
             "filenamePattern": "*.rs"
+          },
+          {
+            "filenamePattern": "*.v"
+          },
+          {
+            "filenamePattern": "*.vh"
+          },
+          {
+            "filenamePattern": "*.sv"
+          },
+          {
+            "filenamePattern": "*.svh"
           }
         ],
         "priority": "default"
