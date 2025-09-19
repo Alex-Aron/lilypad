@@ -28,12 +28,13 @@ static SYNTAX_COLORED_BLOCKS: BlocksTheme = BlocksTheme::new(|block_type, _| {
     use crate::block_editor::BlockType::*;
 
     match block_type {
-        Object => Some(Color32::from_rgb(247, 109, 60)),
+        Object => Some(Color32::from_rgb(255, 21, 21)),
         FunctionDef => Some(Color32::from_rgb(163, 93, 213)),
         While => Some(Color32::from_rgb(245, 163, 0)),
         If => Some(Color32::from_rgb(103, 199, 40)),
         For => Some(Color32::from_rgb(255, 131, 193)),
         Try => Some(Color32::from_rgb(84, 129, 230)),
+        Always => Some(Color32::from_rgb(255, 99, 71)),
         Switch => Some(Color32::from_rgb(255, 192, 203)),
         Generic => Some(Color32::from_rgb(42, 189, 218)),
         Error => Some(Color32::from_rgb(255, 0, 0)),

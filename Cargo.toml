@@ -55,7 +55,7 @@ tree-sitter-java = "0.23"
 tree-sitter-c-sharp = "0.23"
 tree-sitter-cpp = "0.23"
 tree-sitter-rust = "0.24"
-tree-sitter-verilog = "1.0.3"
+tree-sitter-c = "0.24.1"
 tree-sitter-systemverilog = "0.2.1"
 
 # wasm stuff

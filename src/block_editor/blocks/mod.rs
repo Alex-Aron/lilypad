@@ -67,6 +67,7 @@ pub enum BlockType {
     If,
     For,
     Try,
+    Always,
     Switch,
     Generic,
     Comment,

@@ -33,12 +33,12 @@ impl LanguageConfig {
         match file_name.split('.').next_back() {
             Some("py") => &PYTHON_LANGUAGE,
             Some("java") => &JAVA_LANGUAGE,
-            Some("cpp") | Some("h") | Some("hpp") => &CPP_LANGUAGE,
+            Some("cpp") | Some("hpp") => &CPP_LANGUAGE,
+            Some("c") | Some("h") => &C_LANGUAGE,
             Some("cs") => &CS_LANGUAGE,
             Some("rs") => &RUST_LANGUAGE,
-            Some("v") | Some("vh") => &VERILOG_LANGUAGE,
-            Some("sv") | Some("svh") => &SYSTEMVERILOG_LANGUAGE,
-            _ => &PYTHON_LANGUAGE, // TODO: plain text mode?
+            Some("sv") | Some("svh") | Some("v") | Some("vh") => &SYSTEMVERILOG_LANGUAGE,
+            _ => &PYTHON_LANGUAGE, // TODO: plain text mode? (Default will become markdown)
         }
     }
 
@@ -388,7 +388,7 @@ const CS_LANGUAGE: LanguageConfig = LanguageConfig {
 const CPP_LANGUAGE: LanguageConfig = LanguageConfig {
     name: "cpp",
     ts_lang: tree_sitter_cpp::LANGUAGE,
-    highlight_query: tree_sitter_cpp::HIGHLIGHT_QUERY,
+    highlight_query: tree_sitter_c::HIGHLIGHT_QUERY, // Temp fix, will work for most code but wont highlight classes properly
     new_scope_char: NewScopeChar::Brace,
     node_categorizer: |node| {
         use BlockType::*;
@@ -424,6 +424,7 @@ const CPP_LANGUAGE: LanguageConfig = LanguageConfig {
             "continue_statement" => Some(Generic),
             "break_statement" => Some(Generic),
             "pass_statement" => Some(Generic),
+            "using_declaration" => Some(Generic),
             "local_variable_declaration" => {
                 // don't create a block for a for loop's variable declaration
                 if node.parent().map_or("", |p| p.kind()) == "for_statement" {
@@ -452,6 +453,62 @@ const CPP_LANGUAGE: LanguageConfig = LanguageConfig {
     highlight: STANDARD_HIGHLIGHT,
 };
 
+const C_LANGUAGE: LanguageConfig = LanguageConfig {
+    name: "c",
+    ts_lang: tree_sitter_c::LANGUAGE,
+    highlight_query: tree_sitter_c::HIGHLIGHT_QUERY,
+    new_scope_char: NewScopeChar::Brace,
+    node_categorizer: |node| {
+        use BlockType::*;
+
+        match node.kind() {
+            // scopes
+            "function_definition" => Some(FunctionDef),
+            "type_definition" => Some(Object),
+            "field_declaration_list" => Some(Divider),
+            "union_specifier" => Some(FunctionDef),
+            "while_statement" => Some(While),
+            "if_statement" => {
+                if node.prev_sibling().map_or("", |s| s.kind()) == "else" {
+                    None
+                } else {
+                    Some(If)
+                }
+            }
+            "for_statement" => Some(For),
+            "switch_statement" => Some(Switch),
+            "switch_case" => Some(Divider),
+
+            // normal expressions (incomplete)
+            "preproc_include" => Some(Generic),
+            "preproc_def" => Some(FunctionDef),
+            "preproc_if" => Some(Generic),
+            "preproc_ifdef" => Some(Generic),
+            "preproc_ifndef" => Some(Generic),
+            "expression_statement" => Some(Generic),
+            "continue_statement" => Some(Generic),
+            "break_statement" => Some(Generic),
+            "return_statement" => Some(Generic),
+            "declaration" => Some(Generic),
+
+            // comments
+            "comment" => Some(Comment),
+
+            // dividers to keep generics from merging
+            "else_clause" => Some(Divider),
+
+            // do not handle the rest
+            _ => None,
+        }
+    },
+    string_node_ids: StringNodeIDs {
+        string: 360,
+        string_bounds: &[162],
+    },
+    palettes: &[Palette::new("General", &[])],
+    highlight: STANDARD_HIGHLIGHT,
+};
+
 const RUST_LANGUAGE: LanguageConfig = LanguageConfig {
     name: "rust",
     ts_lang: tree_sitter_rust::LANGUAGE,
@@ -459,7 +516,6 @@ const RUST_LANGUAGE: LanguageConfig = LanguageConfig {
     new_scope_char: NewScopeChar::Brace,
     node_categorizer: |node| {
         use BlockType::*;
-
         match node.kind() {
             // scopes
             "struct_item" => Some(Object),
@@ -492,18 +548,10 @@ const RUST_LANGUAGE: LanguageConfig = LanguageConfig {
             }
             "match_block" => Some(Switch),
             "binary_expression" => {
-                if node.parent().map_or("", |s| s.kind()) == "block" {
-                    None //some(generic) for this and idenitifer enabled multiline let, but caused other issues
-                } else {
-                    None
-                }
+               None
             }
             "identifier" => {
-                if node.parent().map_or("", |s| s.kind()) == "block" {
-                    None
-                } else {
-                    None
-                }
+             None
             }
             //Some(Switch),
             "match_arm" => Some(Generic),
@@ -564,7 +612,6 @@ const RUST_LANGUAGE: LanguageConfig = LanguageConfig {
                     None
                 }
             }
-
             "macro_invocation" => {
                 if let Some(parent) = node.parent() {
                     let value_contexts = [
@@ -589,7 +636,6 @@ const RUST_LANGUAGE: LanguageConfig = LanguageConfig {
             // normal expressions (incomplete)
             "use_item" => Some(Generic),
             "else_clause" => Some(Divider),
-            //"break_expressionex" => Some(Generic),
             "return_expression" => Some(Generic),
             "assignment_expression" => Some(Generic),
             // comments
@@ -637,198 +683,76 @@ const RUST_LANGUAGE: LanguageConfig = LanguageConfig {
     highlight: STANDARD_HIGHLIGHT,
 };
 
-const VERILOG_LANGUAGE: LanguageConfig = LanguageConfig {
-    name: "verilog",
-    ts_lang: tree_sitter_verilog::LANGUAGE,
-    highlight_query: concat!(
-        "[\"module\" \"endmodule\" \"input\" \"output\" \"inout\" \"wire\" \"reg\"] @keyword\n",
-        "[\"always\" \"initial\" \"begin\" \"end\" \"if\" \"else\" \"case\" \"endcase\"] @keyword\n",
-        "[\"for\" \"while\" \"repeat\" \"forever\" \"task\" \"endtask\" \"function\" \"endfunction\"] @keyword\n",
-        "[\"assign\" \"parameter\" \"localparam\" \"generate\" \"endgenerate\"] @keyword\n",
-        "[\"integer\" \"real\" \"time\" \"realtime\" \"event\"] @type\n"
-    ),
-    new_scope_char: NewScopeChar::Begin,
-    node_categorizer: |node| {
-        use BlockType::*;
-
-        match node.kind() {
-            // modules and interfaces
-            "module_declaration" => Some(Object),
-            "interface_declaration" => Some(Object),
-            "package_declaration" => Some(Object),
-            
-            // tasks and functions
-            "task_declaration" => Some(FunctionDef),
-            "function_declaration" => Some(FunctionDef),
-            
-            // control structures
-            "if_statement" => Some(If),
-            "case_statement" => Some(Switch),
-            "for_statement" => Some(For),
-            "while_statement" => Some(While),
-            "repeat_statement" => Some(For),
-            "forever_statement" => Some(While),
-            
-            // blocks
-            "initial_construct" => Some(Generic),
-            "always_construct" => Some(Generic),
-            "final_construct" => Some(Generic),
-            
-            // declarations
-            "data_declaration" => Some(Generic),
-            "net_declaration" => Some(Generic),
-            "parameter_declaration" => Some(Generic),
-            "localparam_declaration" => Some(Generic),
-            
-            // instantiations
-            "module_instantiation" => Some(Generic),
-            "interface_instantiation" => Some(Generic),
-            
-            // assignments
-            "continuous_assign" => Some(Generic),
-            "procedural_continuous_assign" => Some(Generic),
-            
-            // comments
-            "comment" => Some(Comment),
-            
-            // dividers
-            "else_clause" => Some(Divider),
-            "default_clause" => Some(Divider),
-            
-            _ => None,
-        }
-    },
-    string_node_ids: StringNodeIDs {
-        string: 200, // placeholder - needs to be determined from actual grammar
-        string_bounds: &[34], // double quote
-    },
-    palettes: &[
-        Palette::new(
-            "Modules",
-            &[
-                Snippet::new("module", "module module_name(\n    // ports\n);\n    // module body\nendmodule\n"),
-                Snippet::new("interface", "interface interface_name;\n    // interface body\nendinterface\n"),
-                Snippet::new("task", "task task_name;\n    // task body\nendtask\n"),
-                Snippet::new("function", "function return_type function_name;\n    // function body\nendfunction\n"),
-            ],
-        ),
-        Palette::new(
-            "Control",
-            &[
-                Snippet::new("if", "if (condition) begin\n    // statements\nend\n"),
-                Snippet::new("if_else", "if (condition) begin\n    // if statements\nend else begin\n    // else statements\nend\n"),
-                Snippet::new("case", "case (expression)\n    value1: begin\n        // statements\n    end\n    default: begin\n        // default statements\n    end\nendcase\n"),
-                Snippet::new("for", "for (int i = 0; i < limit; i++) begin\n    // statements\nend\n"),
-                Snippet::new("while", "while (condition) begin\n    // statements\nend\n"),
-            ],
-        ),
-        Palette::new(
-            "Blocks",
-            &[
-                Snippet::new("always", "always @(*) begin\n    // combinational logic\nend\n"),
-                Snippet::new("always_ff", "always_ff @(posedge clk) begin\n    // sequential logic\nend\n"),
-                Snippet::new("initial", "initial begin\n    // initialization\nend\n"),
-                Snippet::new("final", "final begin\n    // finalization\nend\n"),
-            ],
-        ),
-    ],
-    highlight: STANDARD_HIGHLIGHT,
-};
-
 const SYSTEMVERILOG_LANGUAGE: LanguageConfig = LanguageConfig {
     name: "systemverilog",
     ts_lang: tree_sitter_systemverilog::LANGUAGE,
-    highlight_query: concat!(
-        "[\"module\" \"endmodule\" \"input\" \"output\" \"inout\" \"wire\" \"reg\" \"logic\"] @keyword\n",
-        "[\"always\" \"always_ff\" \"always_comb\" \"always_latch\" \"initial\" \"begin\" \"end\"] @keyword\n",
-        "[\"if\" \"else\" \"case\" \"endcase\" \"for\" \"while\" \"repeat\" \"forever\"] @keyword\n",
-        "[\"task\" \"endtask\" \"function\" \"endfunction\" \"return\"] @keyword\n",
-        "[\"class\" \"endclass\" \"interface\" \"endinterface\" \"package\" \"endpackage\"] @keyword\n",
-        "[\"assign\" \"parameter\" \"localparam\" \"generate\" \"endgenerate\"] @keyword\n",
-        "[\"bit\" \"byte\" \"int\" \"integer\" \"time\" \"real\" \"string\"] @type\n"
-    ),
+    highlight_query: include_str!("./highlights/system_verilog_highlights.scm"),
     new_scope_char: NewScopeChar::Begin,
     node_categorizer: |node| {
         use BlockType::*;
-
         match node.kind() {
             // modules and interfaces
             "module_declaration" => Some(Object),
+            //"module_ansi_header" => Some(Object),
             "interface_declaration" => Some(Object),
             "package_declaration" => Some(Object),
             "class_declaration" => Some(Object),
             "program_declaration" => Some(Object),
-            
             // tasks and functions
             "task_declaration" => Some(FunctionDef),
             "function_declaration" => Some(FunctionDef),
             "method_declaration" => Some(FunctionDef),
             "constructor_declaration" => Some(FunctionDef),
-            
             // control structures
             "if_statement" => Some(If),
             "case_statement" => Some(Switch),
+            "case_item" => Some(Switch),
             "casex_statement" => Some(Switch),
             "casez_statement" => Some(Switch),
             "unique_case_statement" => Some(Switch),
-            "for_statement" => Some(For),
-            "foreach_statement" => Some(For),
-            "while_statement" => Some(While),
-            "do_while_statement" => Some(While),
+            "loop_statement" => Some(For),
             "repeat_statement" => Some(For),
             "forever_statement" => Some(While),
-            
             // try-catch for SystemVerilog
             "try_statement" => Some(Try),
-            
             // blocks
             "initial_construct" => Some(Generic),
-            "always_construct" => Some(Generic),
-            "always_comb" => Some(Generic),
-            "always_ff" => Some(Generic),
-            "always_latch" => Some(Generic),
+            "always_construct" => Some(Always),
             "final_construct" => Some(Generic),
-            
             // declarations
             "data_declaration" => Some(Generic),
             "net_declaration" => Some(Generic),
             "parameter_declaration" => Some(Generic),
             "localparam_declaration" => Some(Generic),
-            "typedef_declaration" => Some(Generic),
+            "type_declaration" => Some(Object),
             "property_declaration" => Some(Generic),
             "sequence_declaration" => Some(Generic),
-            
             // instantiations
             "module_instantiation" => Some(Generic),
             "interface_instantiation" => Some(Generic),
             "class_instantiation" => Some(Generic),
-            
             // assignments
             "continuous_assign" => Some(Generic),
             "procedural_continuous_assign" => Some(Generic),
             "blocking_assignment" => Some(Generic),
             "nonblocking_assignment" => Some(Generic),
-            
             // assertions and coverage
             "assertion_statement" => Some(Generic),
             "assume_statement" => Some(Generic),
             "cover_statement" => Some(Generic),
             "expect_statement" => Some(Generic),
-            
             // comments
             "comment" => Some(Comment),
-            
             // dividers
-            "else_clause" => Some(Divider),
+            //"seq_block" => Some(Generic),
             "default_clause" => Some(Divider),
             "catch_clause" => Some(Divider),
-            
             _ => None,
         }
     },
     string_node_ids: StringNodeIDs {
         string: 300, // placeholder - needs to be determined from actual grammar
-        string_bounds: &[34], // double quote
+        string_bounds: &[162], // double quote
     },
     palettes: &[
         Palette::new(

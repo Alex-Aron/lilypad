@@ -28,6 +28,7 @@ impl BlockType {
             If => "If",
             For => "For",
             Try => "Try",
+            Always => "Always",
             Switch => "Switch",
             Generic => "Generic",
             Comment => "Comment",

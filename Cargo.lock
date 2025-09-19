@@ -1542,6 +1542,7 @@ dependencies = [
  "serde-wasm-bindgen",
  "serde_json",
  "tree-sitter",
+ "tree-sitter-c",
  "tree-sitter-c-sharp",
  "tree-sitter-cpp",
  "tree-sitter-java",
@@ -1549,7 +1550,6 @@ dependencies = [
  "tree-sitter-python",
  "tree-sitter-rust",
  "tree-sitter-systemverilog",
- "tree-sitter-verilog",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -2937,6 +2937,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "tree-sitter-c"
+version = "0.24.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1a3aad8f0129083a59fe8596157552d2bb7148c492d44c21558d68ca1c722707"
+dependencies = [
+ "cc",
+ "tree-sitter-language",
+]
+
+[[package]]
 name = "tree-sitter-c-sharp"
 version = "0.23.1"
 source = "git+https://github.com/tree-sitter/tree-sitter-c-sharp?branch=master#3431444351c871dffb32654f1299a00019280f2f"
@@ -2996,16 +3006,6 @@ name = "tree-sitter-systemverilog"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6bbc6b0711f1ba6ca2531a737aec150d3ee776146b81f1a02d6122f786d0517f"
-dependencies = [
- "cc",
- "tree-sitter-language",
-]
-
-[[package]]
-name = "tree-sitter-verilog"
-version = "1.0.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d4e7e0360395852f1f6ff5b7b82c72dc6557d181073188df1d60ec469ea69c66"
 dependencies = [
  "cc",
  "tree-sitter-language",

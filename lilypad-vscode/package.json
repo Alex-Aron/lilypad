@@ -40,6 +40,9 @@
             "filenamePattern": "*.cpp"
           },
           {
+            "filenamePattern": "*.c"
+          },
+          {
             "filenamePattern": "*.h"
           },
           {
