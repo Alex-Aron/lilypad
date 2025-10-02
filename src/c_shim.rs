@@ -1,6 +1,6 @@
 use std::{
     alloc::{self, Layout},
-    ffi::{c_char, c_int, c_void},
+    ffi::{c_int, c_void},
     mem::align_of,
     ptr,
 };
@@ -207,4 +207,3 @@ pub unsafe extern "C" fn fwrite(
 ) -> usize {
     panic!("fwrite is not supported");
 }
-
