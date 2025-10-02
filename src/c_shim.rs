@@ -178,12 +178,6 @@ pub unsafe extern "C" fn isprint(c: c_int) -> bool {
 }
 
 /* --------------------------------- stdio.h -------------------------------- */
-
-#[no_mangle]
-pub unsafe extern "C" fn fprintf(_file: *mut c_void, _format: *const c_void, _args: ...) -> c_int {
-    panic!("fprintf is not supported");
-}
-
 #[no_mangle]
 pub unsafe extern "C" fn fputs(_s: *const c_void, _file: *mut c_void) -> c_int {
     panic!("fputs is not supported");
@@ -214,12 +208,3 @@ pub unsafe extern "C" fn fwrite(
     panic!("fwrite is not supported");
 }
 
-#[no_mangle]
-pub unsafe extern "C" fn vsnprintf(
-    _buf: *mut c_char,
-    _size: usize,
-    _format: *const c_char,
-    _args: ...
-) -> c_int {
-    panic!("vsnprintf is not supported");
-}
